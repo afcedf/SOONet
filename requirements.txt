@@ -1,0 +1,11 @@
+ftfy
+coloredlogs
+easydict
+transformers
+tqdm
+h5py
+fvcore
+terminaltables
+multimethod
+tensorboard
+numpy

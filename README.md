@@ -2,53 +2,100 @@
 
 [![arXiv](https://img.shields.io/badge/arXiv-Paper-<COLOR>.svg)](https://arxiv.org/abs/2303.08345)
 
-This repository is an official implementation of [SOONet](https://arxiv.org/abs/2303.08345). Code will be released soon.
-
-## Overview
+This repository is an official implementation of [SOONet](https://arxiv.org/abs/2303.08345). SOONet is an end-to-end framework for temporal grounding in long videos. It manages to model an hours-long video with one-time network execution, alleviating the inefficiency issue caused by the sliding window pipeline. 
 
 ![Framework](figs/framework.png)
 
-SOONet is an end-to-end framework for temporal grounding in long videos. It manages to model an hours-long video with one-time network execution, alleviating the inefficiency issue caused by the sliding window pipeline. Besides, it integrates both inter-anchor context knowledge and intra-anchor content knowledge with carefully tailored network structure and training objectives, leading to accurate temporal boundary localization. SOONet achieves state-of-the-art performance on MAD and Ego4d, regarding both accuracy and efficiency.
+## 📢 News
+- [2023.9.29] Code is released.
+- [2023.7.14] Our paper has been accepted to ICCV 2023!
 
-## Main Results
+## 🚀 Preparation
 
-We provide results on MAD **test set**. More detailed experimental results can be found in the paper. Models are trained and tested with *1x A100-80G*.
+### 1. Install dependencies
+The code requires python and we recommend you to create a new environment using conda.
 
-### **Accuracy Comparison**
+```bash
+conda create -n soonet python=3.8
+```
 
-| Method  | R1@0.1 | R5@0.1 | R50@0.1 | R1@0.3 | R5@0.3 | R50@0.3 | R1@0.5 | R5@0.5 | R50@0.5 |
-|:-------:|:------:|:------:|:-------:|:------:|:------:|:-------:|:------:|:------:|:-------:|
-| VLG-Net | 3.64   | 11.66  | 39.78   | 2.76   | 9.31   | 34.27   | 1.65   | 5.99   | 24.93   |
-| CLIP    | 6.57   | 15.05  | 37.92   | 3.13   | 9.85   | 28.71   | 1.39   | 5.44   | 18.80   |
-| CONE    | 8.90   | 20.51  | 43.36   | 6.87   | 16.11  | 34.73   | 4.10   | 9.59   | 20.56   |
-| **SOONet** | **11.26** | **23.21** | **50.32** | **9.00** | **19.64** | **44.78** | **5.32** | **13.14** | **32.59** |
+Then install the dependencies with pip.
 
-### **Efficiency Comparison**
+```bash
+conda activate soonet
+pip install torch==1.13.1+cu117 torchvision==0.14.1+cu117 --extra-index-url https://download.pytorch.org/whl/cu117
+pip install -r requirements.txt
+```
 
-| Method  | Params | FLOPs | GPU Mem. | Execution Time |
-|:-------:|:------:|:-----:|:--------:|:--------------:|
-| CLIP    |  0     | 0.2G  | 2.9G     |  7387.8s       |
-| VLG-Net | 5,330,435 | 1757.3G | 20.0G | 29556.0s     |
-| **SOONet** | 22,970,947 | 70.2G | 2.4G | **505.0s**  |
+### 2. Download data
+- You should request access to the MAD dataset from [official webpage](https://github.com/Soldelli/MAD). Noded that all our experiments are implemented on MAD-v1.
+- Upon completion of the download, extract the zip file contents and allocate the data to the "data/mad" directory.
 
-## Qualitative Results
+### 3. Data preprocess
 
-![Visualization](figs/visualization.png)
+Use the following commands to convert the annotation format and extract the sentence features.
 
-## Citation
+```bash
+python preprocess/proc_mad_anno.py
+python preprocess/encode_text_by_clip.py
+```
+
+The final data folder structure should looks like
+```
+data
+└───mad/
+│    └───annotations/
+│        └───MAD_train.json
+│        └───MAD_val.json
+│        └───MAD_test.json
+│        └───train.txt
+│        └───val.txt
+│        └───test.txt
+│    └───features/  
+│        └───CLIP_frame_features_5fps.h5
+│        └───CLIP_language_features_MAD_test.h5
+│        └───CLIP_language_sentence_features.h5
+│        └───CLIP_language_tokens_features.h5
+```
+
+## 🔥 Experiments
+
+### Training
+
+Run the following commands for training model on MAD dataset:
+
+```bash
+python -m src.main --exp_path /path/to/output --config_name soonet_mad --device_id 0 --mode train
+```
+
+Please be advised that utilizing a batch size of 32 will consume approximately 70G of GPU memory. 
+Decreasing the batch size can prevent out-of-memory, but it may also have a detrimental impact on accuracy.
+
+### Inference
+
+Once training is finished, you can use the following commands to inference on the test set of MAD.
+
+```bash
+python -m src.main --exp_path /path/to/training/output --config_name soonet_mad --device_id 0 --mode test
+```
+
+
+## 😊 Citation
 
 If you find this work useful in your research, please cite our paper:
 
 ```bibtex
-@article{pan2023scanning,
-  title={Scanning Only Once: An End-to-end Framework for Fast Temporal Grounding in Long Videos},
-  author={Pan, Yulin and He, Xiangteng and Gong, Biao and Lv, Yiliang and Shen, Yujun and Peng, Yuxin and Zhao, Deli},
-  journal={arXiv preprint arXiv:2303.08345},
-  year={2023}
+@InProceedings{Pan_2023_ICCV,
+    author    = {Pan, Yulin and He, Xiangteng and Gong, Biao and Lv, Yiliang and Shen, Yujun and Peng, Yuxin and Zhao, Deli},
+    title     = {Scanning Only Once: An End-to-end Framework for Fast Temporal Grounding in Long Videos},
+    booktitle = {Proceedings of the IEEE/CVF International Conference on Computer Vision (ICCV)},
+    month     = {October},
+    year      = {2023},
+    pages     = {13767-13777}
 }
 ```
 
-## Acknowledgement
+## 🙏🏻 Acknowledgement
 
 Our code references the following projects. Many thanks to the authors.
 
